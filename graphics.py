@@ -20,7 +20,8 @@ GraphicsObjects are provided that can be drawn into a GraphWin. As a
 simple example, here is a complete program to draw a circle of radius
 10 centered in a 100x100 window:
 
---------------------------------------------------------------------
+:Example:
+
 from graphics import *
 
 def main():
@@ -31,7 +32,7 @@ def main():
     win.close()    # Close window when done
 
 main()
---------------------------------------------------------------------
+
 GraphWin objects support coordinate transformation through the
 setCoords method and pointer-based input through getMouse.
 
