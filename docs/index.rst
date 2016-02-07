@@ -1,5 +1,5 @@
 .. cell_defense documentation master file, created by
-   sphinx-quickstart on Thu Feb  4 22:09:48 2016.
+   sphinx-quickstart on Sat Feb  6 17:18:16 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -13,6 +13,8 @@ Contents:
 
    cell_defense
    graphics
+   move
+   pieces
 
 
 Indices and tables

@@ -1,166 +1,47 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb  2 22:34:29 2016
+Welcome to Cell Defense!
 
-@author: jessime
+Description
+-----------
 
-Description:
+This is a tower defense style game with a biological theme.
+The player controls a macrophage cell, in an attempt to defend healthy cells from viruses. 
 
-Notes:
+Notes
+-----
+
 Player's stuff (macrophage, towers, cells) is part of the Game
 Viruses and Resources are part of the Level that spawns them
-May work:
-Attributes
-    
-win : graphics.GraphWin
-    The new window in which the game will be rendered and played
 
-level_num : int
-    The total number of levels making up a game
+Controls
+--------
 
-level : Level
-    The current level being played
-    
-mac : Macrophage
-    The macrophage controlled by the player
-    
-cells : list of Cell objects
-    The cells the player is attempting to defend from viruses
+Definitely should include description of controls somewhere here.
 """
 
-import graphics as grf
 import time
 import random
+import sys
 
-def get_corners(pic):
-    """Return the corner of an image
-    
-    :param pic: The image for which the corners will be found
-    :type pic: graphics.Image 
-    :return: Four values representing the boarders of the image
-    :rtype: float
-    """
-    left = pic.anchor.x - (pic.getWidth()/2)
-    top = pic.anchor.y - (pic.getWidth()/2)
-    right = pic.anchor.x + (pic.getWidth()/2)
-    bottom = pic.anchor.y + (pic.getWidth()/2)
-    return left, top, right, bottom
-    
-def point_in_rect(x, y, pic):
-    """Decide if a point is found within the corners of an image
-    
-    :param x: x coordinate for the point being checked
-    :type x: int, float
-    :param y: y coordinate for the point being checked
-    :type y: int, float
-    :param pic: The image in which to search for the given point
-    :type pic: graphics.Image  
-    :return: Whether or not the point lies within an image
-    :rtype: bool            
-    """
-    inside = False
-    left, top, right, bottom = get_corners(pic)
-    if left <= x <= right and top <= y <= bottom:
-        inside = True
-    return inside
-    
-def collision_detection(pic1, pic2):
-    """Decide if two images are touching on screen
-    
-    :param pic1: The first image for checking collision
-    :type pic1: graphics.Image
-    :param pic2: The second image for checking collison
-    :type pic2: graphics.Image
-    :return: Whether or not the two images have collided
-    :rtype: bool
-    """
-    collision = False
-    for a, b in [(pic1, pic2), (pic2, pic1)]:
-        left, top, right, bottom = get_corners(a)
-        if ((point_in_rect(left, top, b)) or
-            (point_in_rect(left, bottom, b)) or
-            (point_in_rect(right, top, b)) or
-            (point_in_rect(right, bottom, b))):
-            collision = True
-    return collision
+import graphics as grf
+import pieces
+import move
 
-class Virus(object):
-    
-    def __init__(self, win, scale):
-        self.win = win
-        self.loc = grf.Point(random.randint(25, self.win.width - 225), 
-                             random.randint(25, 50))
-        self.pic = grf.Image(self.loc, 'images/virus.gif')
-        self.power = random.randint(1, 5) * (int(scale**.5)+1)
-        self.health = random.randint(5, 10) * (int(scale**.5)+1)
-        self.speed = random.randint(1, 4) * (int(scale**.5)+1)
-        
-    def move(self):
-        """Move towards cells according to speed attribute"""
-        if self.pic.anchor.y <= self.win.height - 75:
-            self.pic.move(0, self.speed)
-
-class Cell(object):
-    """Cells are what the player is stopping the Viruses from infecting."""
-    
-    def __init__(self, win, num):
-        self.win = win
-        self.num = num
-        self.loc = grf.Point(50+(self.num*100), self.win.height-30)
-        self.pic = grf.Image(self.loc, 'images/cells.gif')
-        self.health = 100
-        self.bar = None
-        
-class Macrophage(object):
+class Panel(object):
+    """Section on the right of the screen used for displaying Game information"""
     
     def __init__(self, win):
         self.win = win
-        self.pic = grf.Image(grf.Point(575, 200), 'images/macrophage2.gif')        
-        self.speed = 10
-        self.jump = 350
-        self.jump_refresh = 3
-        self.last_jump = 0
-
-    def left(self):
-        if self.pic.anchor.x >= 20:
-            self.pic.move(-self.speed, 0)
-        
-    def down(self):
-        if self.pic.anchor.y <= self.win.height - 20:
-            self.pic.move(0, self.speed)
-
-    def right(self):
-        if self.pic.anchor.x <= self.win.width - 20:
-            self.pic.move(self.speed, 0)
-        
-    def up(self):
-        if self.pic.anchor.y >= 20:
-            self.pic.move(0, -self.speed)
-            
-    def left_jump(self):
-        if (self.pic.anchor.x >= 20+self.jump and 
-            self.last_jump + self.jump_refresh < time.time()):
-            self.pic.move(-self.jump, 0)
-            self.last_jump = time.time()
-            
-    def down_jump(self):
-        if (self.pic.anchor.y <= self.win.height-20-self.jump and
-            self.last_jump + self.jump_refresh < time.time()):
-            self.pic.move(0, self.jump)
-            self.last_jump = time.time()
-            
-    def right_jump(self):
-        if (self.pic.anchor.x <= self.win.width - 20 - self.jump and
-            self.last_jump + self.jump_refresh < time.time()):
-            self.pic.move(self.jump, 0)
-            self.last_jump = time.time()
-            
-    def up_jump(self):
-        if (self.pic.anchor.y >= 20 + self.jump and
-            self.last_jump + self.jump_refresh < time.time()):
-            self.pic.move(0, -self.jump)
-            self.last_jump = time.time()
-
+        self.background = self.make_background()
+    
+    def make_background(self):
+        """Draws the right area of the screen where game statistcs are kept"""
+        p1 = grf.Point(self.win.width-200, 0)
+        p2 = grf.Point(self.win.width, self.win.height)
+        background = grf.Rectangle(p1, p2)
+        background.setFill('grey')
+        return background
         
 class Level(object):
     
@@ -169,7 +50,11 @@ class Level(object):
         self.win = win
         self.mac = mac
         self.cells = cells
-        self.len = 45
+        self.panel = Panel(self.win)
+        self.len = 15
+        self.framerate = 1/20.
+        self.current_time = None
+        self.end_time = None
         self.viruses = self.spawn_viruses()        
         self.action = {'a': self.mac.left,
                        's': self.mac.down,
@@ -184,86 +69,149 @@ class Level(object):
         """Randomly generate a number of viruses to fight"""
         viruses = []
         for v in xrange(random.randint(10, 10 + self.num*2)):
-            viruses.append(Virus(self.win, self.num))
+            viruses.append(pieces.Virus(self.win, self.num))
         return set(viruses)
-
-    def draw_info_section(self):
-        """Draws the right area of the screen where game statistcs are kept"""
-        p1 = grf.Point(self.win.width-200, 0)
-        p2 = grf.Point(self.win.width, self.win.height)
-        background = grf.Rectangle(p1, p2)
-        background.setFill('grey')
-        background.draw(self.win)
         
     def initial_render(self):
         """Draw everything on screen at the beginning of a level"""
-        self.draw_info_section()
-        
+        self.panel.background.draw(self.win)
         self.mac.pic.draw(self.win)
         [v.pic.draw(self.win) for v in self.viruses]
         [c.pic.draw(self.win) for c in self.cells]
+        [c.bar.draw(self.win) for c in self.cells]
         #draw towers
+        
+    def cleanup(self):
+        self.panel.background.undraw()
+        self.mac.pic.undraw()
+        [v.pic.undraw() for v in self.viruses]
+        [c.pic.undraw() for c in self.cells]
+        [c.bar.undraw() for c in self.cells]        
         
     def check_eaten(self):
         """Use collision detection to decide which viruses have been eaten"""
         eaten = []
         for v in self.viruses:
-            if collision_detection(v.pic, self.mac.pic):
+            if move.collision_detection(v.pic, self.mac.pic):
                 eaten.append(v)
                 v.pic.undraw()
         self.viruses.difference_update(eaten)
         
+    def check_infected(self):
+        """Use cell health to check if any cells have been infected"""
+        healthy = []
+        for c in self.cells:
+            if c.health <= 0:
+                c.pic.undraw()
+                c.bar.undraw()
+            else:
+                healthy.append(c)
+        self.cells = healthy
+        
     def interlude(self):
         pass
     
+    def level_over(self):
+        """Check if the level is over.
+        
+        The level can end in several different ways:
+        
+        1. The time for the level runs out
+        2. The player kills all of the viruses
+        3. The player loses more than half of the cells and loses the game.
+  
+        Returns
+        -------
+        over : bool
+            Whether or not the level is over
+        """
+        over = False
+        if (self.current_time >= self.end_time or
+            len(self.viruses) == 0 or
+            len(self.cells) < 5):
+            over = True
+        return over
+
+    def update_player(self):
+        last_key = self.win.checkKey()
+        if last_key in self.action:
+            self.action[last_key]()
+    
+    def update_viruses(self):
+        self.check_eaten()
+        [v.move() for v in self.viruses]
+        [v.attack(self.cells) for v in self.viruses]
+        
+    def update_cells(self):
+        self.check_infected()
+        [c.update_bar() for c in self.cells]
+        
+    def update_time(self, loop_start):
+        """Limit loop to framerate, sleeping if necessary. Update current time."""
+        loop_end = time.time()
+        execute_time = loop_end - loop_start
+        if execute_time < self.framerate:
+            time.sleep(self.framerate - execute_time)
+        self.current_time = time.time()         
+        
+    def update(self):
+        """The main loop of a level. Responsible for checking changes each frame."""
+        loop_start = time.time()
+        self.update_player()
+        self.update_viruses()
+        self.update_cells()
+        self.update_time(loop_start)
+       
     def play(self):
+        """Wrapper function for everything that happens during a level."""
         self.interlude()
         self.initial_render()
-            
-        current_time = time.time()
-        end_time = current_time + self.len
+        self.current_time = time.time()
+        self.end_time = self.current_time + self.len
+        while not self.level_over():
+            self.update()
+        self.cleanup()
         
-        while current_time < end_time:
-            last_key = self.win.checkKey()
-            if last_key in self.action:
-                self.action[last_key]()
-                
-            #Move    
-            if random.randint(0, 5) == 0:                
-                [v.move() for v in self.viruses]
-                
-            if random.randint(0, 500):
-                self.check_eaten()
-            #update time
-            current_time = time.time() 
-        
-        self.mac.pic.undraw()
 
         
 class Game(object):
-    """A single game of Cell Defense, primarily consisting of a series of Levels
+    """A single game of Cell Defense, primarily consisting of a series of Levels.
     
-    :py:attr win: The new window in which the game will be rendered and played
-    :type win: graphics.GraphWin
+    Attributes
+    ----------    
+    win : graphics.GraphWin
+        The new window in which the game will be rendered and played
+    
+    level_num : int
+        The total number of levels making up a game
+    
+    level : Level
+        The current level being played
+        
+    mac : Macrophage
+        The macrophage controlled by the player
+        
+    cells : list of Cells
+        The cells the player is attempting to defend from viruses
     """
     
     def __init__(self):
         self.win = grf.GraphWin('Cell Defense', 1200, 800)
         self.level_num = 10
         self.level = None
-        self.mac = Macrophage(self.win)
-        self.cells = [Cell(self.win, i) for i in xrange(10)]
+        self.mac = pieces.Macrophage(self.win)
+        self.cells = [pieces.Cell(self.win, i) for i in xrange(10)]
         
     def start_menu(self):
-        """An initial start menu where player can tune settings"""
+        """An initial start menu where player can tune settings."""
         pass
 
     def game_results(self):
-        """Decides if the game was a win or loss, and displays appropriate screen"""
+        """Decides if the game was a win or loss, and displays appropriate screen."""
         pass
     
     def run(self):
-        """Launches the game"""
+        """Launches the game."""
         self.win.setBackground('white')
         self.start_menu()
         for lvl in xrange(self.level_num):

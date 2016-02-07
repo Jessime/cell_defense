@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # cell_defense documentation build configuration file, created by
-# sphinx-quickstart on Thu Feb  4 22:09:48 2016.
+# sphinx-quickstart on Sat Feb  6 17:18:16 2016.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -18,7 +18,7 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('/home/jessime/Code/cell_defense/'))
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -32,7 +32,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'numpydoc'
 ]
+
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
